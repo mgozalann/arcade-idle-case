@@ -2,7 +2,16 @@ fileFormatVersion: 2
 guid: 42d6b54afce89724bb6e91674558665a
 ModelImporter:
   serializedVersion: 21300
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      74: -1422011007694221501
+    second: Armature|ArmatureAction.001
+  - first:
+      74: -5427973972463258179
+    second: Armature|BoxBT01_01|BedsideTableOpenClip|Base Layer
+  - first:
+      74: -8807503611703632185
+    second: Armature|BoxBT01_02|BedsideTableOpenClip|Base Layer
   externalObjects: {}
   materials:
     materialImportMode: 1

@@ -2,7 +2,61 @@ fileFormatVersion: 2
 guid: 0bc93b5256bf14a47a638ec0eaaa317a
 ModelImporter:
   serializedVersion: 21300
-  internalIDToNameTable: []
+  internalIDToNameTable:
+  - first:
+      74: 7710001158886688736
+    second: Rig|Rig|Attack|Attack
+  - first:
+      74: -6381567845740718521
+    second: Rig|Rig|Bounce|Bounce
+  - first:
+      74: 6321331187020051000
+    second: Rig|Rig|Clicked|Clicked
+  - first:
+      74: -8196231630774868267
+    second: Rig|Rig|Death|Death
+  - first:
+      74: 6646386461832178618
+    second: Rig|Rig|Eat|Eat
+  - first:
+      74: -1854298015059541215
+    second: Rig|Rig|Fear|Fear
+  - first:
+      74: -173582948307519358
+    second: Rig|Rig|Fly|Fly
+  - first:
+      74: 3218679552716411551
+    second: Rig|Rig|Hit|Hit
+  - first:
+      74: -1906006011202273706
+    second: Rig|Rig|Idle_A|Idle_A
+  - first:
+      74: -719483700213937438
+    second: Rig|Rig|Idle_B|Idle_B
+  - first:
+      74: 8973255782690695612
+    second: Rig|Rig|Idle_C|Idle_C
+  - first:
+      74: -221652645679085704
+    second: Rig|Rig|Jump|Jump
+  - first:
+      74: 4143874125720228839
+    second: Rig|Rig|Roll|Roll
+  - first:
+      74: 2934114788485690814
+    second: Rig|Rig|Run|Run
+  - first:
+      74: 5045842377602822844
+    second: Rig|Rig|Sit|Sit
+  - first:
+      74: 3877508687355441100
+    second: Rig|Rig|Spin|Spin
+  - first:
+      74: 6097403918583845668
+    second: Rig|Rig|Swim|Swim
+  - first:
+      74: 3468257711131232733
+    second: Rig|Rig|Walk|Walk
   externalObjects: {}
   materials:
     materialImportMode: 2
