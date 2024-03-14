@@ -1,26 +1,21 @@
-using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-
 public class CollideSpawnPoint : MonoBehaviour
 {
     [SerializeField] private Vector3 _offSet;
-    private Vector3 _lastItemPos;
-
-    [SerializeField] private float _timeToCollect; //isim değişecek
-    [SerializeField] private float _timeToDeliver; //isim değişecek
-
-    [SerializeField] private float _timer;
-
-    [SerializeField] private int _maxItemStorage; //isim değişecek
-    private int _currentStorage; //isim değişecek
-
     [SerializeField] private Transform _storage;
 
-    private List<Item> _inventory = new List<Item>();
-    public List<Item> Inventory => _inventory;
+    [SerializeField] private float _collectTime; 
+    [SerializeField] private float _deliverTime;
+    [SerializeField] private int _maxItemCount;
+    
+    private float _timer;
+
+    private Vector3 _lastItemPos;
+
+    [SerializeField] private List<Item> _inventory = new List<Item>();
 
     private void Start()
     {
@@ -45,23 +40,6 @@ public class CollideSpawnPoint : MonoBehaviour
         {
             DepositeItem(dropable);
         }
-
-        //
-        //     case PlayerPrefKeys.TranformerInput:
-        //         if(other.TryGetComponent(out TransformerInputStorage transformetInputStorage))
-        //         {
-        //             _onEnterTransformerInput(transformetInputStorage);
-        //         }
-        //     break;
-        //
-        //     case PlayerPrefKeys.TransformerStorage:
-        //         if (other.TryGetComponent(out TransformerStorage tranformerStorage))
-        //         {
-        //             _onEnterTransformerZone(tranformerStorage);
-        //         }
-        //     break;
-        //
-        // }
     }
 
     private void OnTriggerExit(Collider other)
@@ -71,8 +49,6 @@ public class CollideSpawnPoint : MonoBehaviour
             _timer = 0f;
         }
     }
-
-
 
     private void GetItem(Item item)
     {
@@ -86,36 +62,23 @@ public class CollideSpawnPoint : MonoBehaviour
                 _lastItemPos = item.transform.localPosition;
 
                 _inventory.Add(item);
-
-                _currentStorage++;
             });
 
         item.transform.DOLocalRotate(Vector3.zero, .25f).SetEase(Ease.InSine);
+
     }
 
 
-    private bool _checkMaxItemCount()
+    private bool CheckMaxItemCount()
     {
-        bool value = false;
-
-        if (_currentStorage < _maxItemStorage)
-        {
-            value = true;
-        }
-
-        else
-        {
-            // if (!_isPlayer)
-            //     EventSystem.CallInvetoryFull();
-        }
+        bool value = _inventory.Count < _maxItemCount;
 
         return value;
     }
 
-    //
     private bool _isEmpty()
     {
-        bool value = _currentStorage == 0;
+        bool value = _inventory.Count == 0;
 
         return value;
     }
@@ -123,16 +86,16 @@ public class CollideSpawnPoint : MonoBehaviour
     private void OnCollectableArea(Collectable collectable)
     {
         _timer += Time.fixedDeltaTime;
-        if (_timer >= _timeToCollect)
+        if (_timer >= _collectTime)
         {
             Item instance = collectable.GetItem();
 
-            if(instance == null) return;
-            
-            if (_checkMaxItemCount())
+            if (instance == null) return;
+
+            if (CheckMaxItemCount())
             {
                 GetItem(instance);
-        
+
                 _timer = 0f;
             }
         }
@@ -146,68 +109,22 @@ public class CollideSpawnPoint : MonoBehaviour
             return;
         }
 
-        if (_timer >= _timeToDeliver)
+        if (_timer >= _deliverTime)
         {
-            _remoteItem();
+            RemoteItem();
 
             _timer = 0f;
 
             return;
         }
     }
-
-    // private void _onEnterTransformerInput(TransformerInputStorage transformerInputStorage)
-    // {
-    //     _timer += Time.fixedDeltaTime;
-    //     if (_isEmpty())
-    //     {
-    //         return;
-    //     }
-    //
-    //     if (transformerInputStorage.IsFull())
-    //     {
-    //         return;
-    //     }
-    //
-    //     if (_timer >= _timeToDeliver)
-    //     {
-    //        /7- DepositeItem(transformerInputStorage);
-    //         _timer = 0f;
-    //
-    //         return;
-    //     }
-    // }
-
-    // private void _onEnterTransformerZone(TransformerStorage storage)
-    // {
-    //     _timer += Time.fixedDeltaTime;
-    //     if (_timer < _timeToCollect)
-    //     {
-    //         return;
-    //     }
-    //
-    //     if (storage.IsEmpty())
-    //     {
-    //         return;
-    //     }
-    //
-    //     if (_checkMaxItemCount())
-    //     {
-    //         _getItem(storage.GetItem());
-    //
-    //         _timer = 0f;
-    //     }
-    // }
-
-    private void _remoteItem()
+    private void RemoteItem()
     {
-        Item item = _inventory[_checkInventory()];
-        _inventory.RemoveAt(_checkInventory());
-    
+        Item item = _inventory[CheckInventory()];
+        _inventory.RemoveAt(CheckInventory());
+
         ResetLastPosition();
-    
-        _currentStorage--;
-    
+
         Destroy(item.gameObject);
     }
 
@@ -217,9 +134,9 @@ public class CollideSpawnPoint : MonoBehaviour
         {
             return;
         }
-        
+
         _timer += Time.fixedDeltaTime;
-        if (_timer >= _timeToDeliver)
+        if (_timer >= _deliverTime)
         {
             for (int i = _inventory.Count - 1; i >= 0; i--)
             {
@@ -227,11 +144,10 @@ public class CollideSpawnPoint : MonoBehaviour
                 {
                     dropable.TakeItem(_inventory[i]);
                     _inventory.RemoveAt(i);
-                    
-                    ResetLastPosition();
-                    _currentStorage--;
 
-                    
+                    ResetPositions();
+                    ResetLastPosition();
+
                     _timer = 0;
                     break;
                 }
@@ -239,22 +155,33 @@ public class CollideSpawnPoint : MonoBehaviour
         }
     }
 
-    private int _checkInventory()
+    private int CheckInventory()
     {
-    
         int id = 0;
-    
+
         if (_inventory.Count - 1 > 0)
         {
             id = _inventory.Count - 1;
         }
-    
+
         return id;
+    }
+
+    private void ResetPositions()
+    {
+        if (_inventory.Count > 0)
+        {
+            for (int i = 0; i < _inventory.Count; i++)
+            {
+                _inventory[i].transform.localPosition = i * _offSet;
+            }
+            _lastItemPos = _inventory[^1].transform.localPosition;
+        }
     }
 
     private void ResetLastPosition()
     {
-        if (_currentStorage == 0)
+        if (_inventory.Count == 0)
         {
             _lastItemPos = Vector3.zero;
         }
