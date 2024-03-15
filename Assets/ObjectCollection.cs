@@ -1,39 +1,40 @@
+using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
-
-public class CollideSpawnPoint : MonoBehaviour
+public class ObjectCollection : MonoBehaviour
 {
+    public event Action OnInventoryFull; 
+    public event Action OnInventoryEmpty; 
+
+    [SerializeField] private List<Item> _inventory = new List<Item>();
+    
     [SerializeField] private Vector3 _offSet;
     [SerializeField] private Transform _storage;
 
     [SerializeField] private float _collectTime; 
     [SerializeField] private float _deliverTime;
     [SerializeField] private int _maxItemCount;
-    
+
     private float _timer;
-
     private Vector3 _lastItemPos;
-
-    [SerializeField] private List<Item> _inventory = new List<Item>();
 
     private void Start()
     {
-        _lastItemPos = Vector3.zero;
+        ResetLastPosition();
 
         _timer = 0f;
     }
-
     private void OnTriggerStay(Collider other)
     {
         if (other.TryGetComponent(out Collectable collectable))
         {
-            OnCollectableArea(collectable);
+            CollectItem(collectable);
         }
 
         if (other.TryGetComponent(out Garbage garbage))
         {
-            //_onEnterGarbageZone();
+            OnGarbageArea(garbage);
         }
 
         if (other.TryGetComponent(out Dropable dropable))
@@ -41,13 +42,9 @@ public class CollideSpawnPoint : MonoBehaviour
             DepositeItem(dropable);
         }
     }
-
     private void OnTriggerExit(Collider other)
     {
-        if (other.TryGetComponent(out Collectable collectable))
-        {
-            _timer = 0f;
-        }
+        _timer = 0f;
     }
 
     private void GetItem(Item item)
@@ -56,52 +53,36 @@ public class CollideSpawnPoint : MonoBehaviour
 
         item.transform.SetParent(_storage);
 
-        item.transform.DOLocalJump(_lastItemPos + _offSet, 2f, 1, .25f).SetEase(Ease.InOutQuad)
-            .OnComplete(() =>
-            {
-                _lastItemPos = item.transform.localPosition;
+        Vector3 pos = _lastItemPos + _offSet;
 
-                _inventory.Add(item);
-            });
-
+        item.transform.DOLocalJump(pos, 1.75f, 1, .25f).SetEase(Ease.InOutQuad);
         item.transform.DOLocalRotate(Vector3.zero, .25f).SetEase(Ease.InSine);
 
+        _lastItemPos = pos;
+        _inventory.Add(item);
+        CheckMaxItemCount();
+
     }
 
-
-    private bool CheckMaxItemCount()
-    {
-        bool value = _inventory.Count < _maxItemCount;
-
-        return value;
-    }
-
-    private bool _isEmpty()
-    {
-        bool value = _inventory.Count == 0;
-
-        return value;
-    }
-
-    private void OnCollectableArea(Collectable collectable)
+    private void CollectItem(Collectable collectable)
     {
         _timer += Time.fixedDeltaTime;
         if (_timer >= _collectTime)
         {
-            Item instance = collectable.GetItem();
-
-            if (instance == null) return;
+            _timer = 0f;
 
             if (CheckMaxItemCount())
             {
-                GetItem(instance);
+                Item instance = collectable.GetItem();
 
-                _timer = 0f;
+                if (instance == null) return;
+
+                GetItem(instance);
             }
         }
     }
 
-    private void OnGarbageArea()
+    private void OnGarbageArea(Garbage garbage)
     {
         _timer += Time.fixedDeltaTime;
         if (_isEmpty())
@@ -111,23 +92,14 @@ public class CollideSpawnPoint : MonoBehaviour
 
         if (_timer >= _deliverTime)
         {
-            RemoteItem();
+            RemoteItem(garbage);
 
             _timer = 0f;
 
             return;
         }
     }
-    private void RemoteItem()
-    {
-        Item item = _inventory[CheckInventory()];
-        _inventory.RemoveAt(CheckInventory());
-
-        ResetLastPosition();
-
-        Destroy(item.gameObject);
-    }
-
+    
     private void DepositeItem(Dropable dropable)
     {
         if (_isEmpty())
@@ -145,6 +117,7 @@ public class CollideSpawnPoint : MonoBehaviour
                     dropable.TakeItem(_inventory[i]);
                     _inventory.RemoveAt(i);
 
+                    
                     ResetPositions();
                     ResetLastPosition();
 
@@ -154,7 +127,27 @@ public class CollideSpawnPoint : MonoBehaviour
             }
         }
     }
+    private void RemoteItem(Garbage garbage)
+    {
+        Item item = _inventory[CheckInventory()];
+        _inventory.RemoveAt(CheckInventory());
 
+        ResetLastPosition();
+        
+        garbage.TakeItem(item);
+    }
+
+    private bool CheckMaxItemCount()
+    {
+        bool value = _inventory.Count < _maxItemCount;
+
+        if (!value)
+        {
+            OnInventoryFull?.Invoke();
+        }
+        
+        return value;
+    }
     private int CheckInventory()
     {
         int id = 0;
@@ -185,5 +178,17 @@ public class CollideSpawnPoint : MonoBehaviour
         {
             _lastItemPos = Vector3.zero;
         }
+    }
+    
+    private bool _isEmpty()
+    {
+        bool value = _inventory.Count == 0;
+
+        if (value)
+        {
+            OnInventoryEmpty?.Invoke();
+        }
+        
+        return value;
     }
 }

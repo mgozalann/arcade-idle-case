@@ -19,7 +19,7 @@ public class Dropable : MonoBehaviour
 
     private float _timer;
     [SerializeField] private float _spawnInterval;
-
+    
     private void Start()
     {
         _timer = _spawnInterval;
@@ -76,6 +76,8 @@ public class Dropable : MonoBehaviour
                         item.transform.DOLocalRotate(Vector3.zero, .25f).SetEase(Ease.InSine);
 
                         yield return new WaitForSeconds(.25f);
+                        
+                        ItemObjectPoolManager.Instance.ReturnObject(item.Type,item);
                         
                         _transformer.SpawnObject();
                         
